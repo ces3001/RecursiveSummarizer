@@ -1,3 +1,10 @@
+#!/usr/local/bin/python3
+# https://github.com/daveshap/RecursiveSummarizer/blob/main/recursively_summarize.py
+# v1.1 # Added chuck_threshold to recurse until down to this number of paragraphs.
+# v1.0 # 2023-01-08 Original v1 from website
+
+chunk_threshold = 5
+
 import openai
 import os
 from time import time,sleep
@@ -48,14 +55,19 @@ def gpt3_completion(prompt, engine='text-davinci-002', temp=0.6, top_p=1.0, toke
 
 if __name__ == '__main__':
     alltext = open_file('input.txt')
-    chunks = textwrap.wrap(alltext, 2000)
-    result = list()
-    count = 0
-    for chunk in chunks:
-        count = count + 1
-        prompt = open_file('prompt.txt').replace('<<SUMMARY>>', chunk)
-        prompt = prompt.encode(encoding='ASCII',errors='ignore').decode()
-        summary = gpt3_completion(prompt)
-        print('\n\n\n', count, 'of', len(chunks), ' - ', summary)
-        result.append(summary)
-    save_file('\n\n'.join(result), 'output_%s.txt' % time())
+    while True:
+        chunks = textwrap.wrap(alltext, 2000)
+        result = list()
+        count = 0
+        for chunk in chunks:
+            count = count + 1
+            prompt = open_file('prompt.txt').replace('<<SUMMARY>>', chunk)
+            prompt = prompt.encode(encoding='ASCII',errors='ignore').decode()
+            summary = gpt3_completion(prompt)
+            print('\n\n\n', count, 'of', len(chunks), ' - ', summary)
+            result.append(summary)
+        filename = 'output_%s.txt' % time()
+        save_file('\n\n'.join(result), filename)
+        if len(chunks) <= chunk_threshold:
+            break
+        alltext = open_file(filename)
